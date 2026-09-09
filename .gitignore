@@ -1,0 +1,6 @@
+# Agent/human context files (local working memory, not part of the course materials)
+AGENTS.md
+.cursor/
+docs/context/
+materials/
+phases/
