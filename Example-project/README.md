@@ -1,71 +1,62 @@
 # Smart Greenhouse
 
-Operator dashboard for a smart greenhouse — Phase 1 skeleton (FastAPI, PostgreSQL, React).
+Operator dashboard for a smart greenhouse — Phase 2 (Factory Method sensors) on the Phase 1 skeleton.
 
 ## Prerequisites
 
 | Tool | Minimum |
 |------|---------|
-| Python | 3.11+ |
-| Node.js | 20 LTS |
+| Python | 3.11+ (optional host venv) |
+| Node.js | 20 LTS (optional host `npm`) |
 | Docker Desktop | current (engine must be running) |
 
-If port 5432 is already used by a local PostgreSQL, set `POSTGRES_PORT` in `.env` (and the matching host port in Compose) before `docker compose up`.
+If host port 5432 is already used, keep `POSTGRES_PORT=5435` in `.env`. Compose still maps that host port to **5432 inside** the Postgres container. Backend containers talk to hostname `postgres` on 5432.
 
 ## First-time setup
 
 From this `Example-project` folder:
 
-1. Copy environment files:
-
-   ```powershell
-   Copy-Item .env.example .env
-   Copy-Item frontend/.env.example frontend/.env
-   ```
-
-2. Start PostgreSQL:
-
-   ```powershell
-   docker compose up -d
-   docker compose ps
-   ```
-
-3. Install the backend and apply the Alembic baseline (no business tables yet):
-
-   ```powershell
-   cd backend
-   python -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   pip install -e ".[dev]"
-   alembic upgrade head
-   cd ..
-   ```
-
-4. Install the frontend:
-
-   ```powershell
-   cd frontend
-   npm install
-   cd ..
-   ```
-
-## Daily start
-
-Three terminals, all from `Example-project`:
-
-```text
-Terminal 1: docker compose up -d
-Terminal 2: cd backend && .\.venv\Scripts\Activate.ps1 && cd src && uvicorn main:app --reload --host 0.0.0.0 --port 8000
-Terminal 3: cd frontend && npm run dev
+```powershell
+Copy-Item .env.example .env
+Copy-Item frontend/.env.example frontend/.env
+docker compose up --build -d
+docker compose exec backend alembic upgrade head
 ```
 
-Run backend tests from `backend/` (PYTHONPATH is set in `pyproject.toml`):
+Optional host tooling (debug only):
 
 ```powershell
 cd backend
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pytest
+pip install -e ".[dev]"
+cd ..\frontend
+npm install
 ```
+
+Host `DATABASE_URL` in `.env` uses `localhost` and `POSTGRES_PORT`. Compose **overrides** backend `DATABASE_URL` to `@postgres:5432`.
+
+## Daily start (required path)
+
+```powershell
+docker compose up --build -d
+docker compose exec backend alembic upgrade head
+```
+
+Migrations from this phase onward:
+
+```powershell
+docker compose exec backend alembic revision --autogenerate -m "message"
+docker compose exec backend alembic upgrade head
+```
+
+Tests:
+
+```powershell
+docker compose exec backend pytest tests -q
+```
+
+Host venv remains valid for unit tests (`cd backend` then `pytest`).
 
 ## URLs
 
@@ -82,3 +73,5 @@ Swagger `/docs` is disabled on purpose.
 ## Phase order
 
 Course assignments: [../phases/README.md](../phases/README.md) (also [docs/phases/README.md](docs/phases/README.md)).
+
+Pattern note for this phase: [docs/patterns/factory-method.md](docs/patterns/factory-method.md).

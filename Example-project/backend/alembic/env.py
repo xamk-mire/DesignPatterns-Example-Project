@@ -14,6 +14,8 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from infrastructure.settings import settings  # noqa: E402
+from infrastructure.persistence.base import Base  # noqa: E402
+from infrastructure.persistence import models as _models  # noqa: E402, F401
 
 config = context.config
 if config.config_file_name is not None:
@@ -21,8 +23,7 @@ if config.config_file_name is not None:
 
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
-# Phase 1: no ORM models yet. Phase 2 will set this to Base.metadata.
-target_metadata = None
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
