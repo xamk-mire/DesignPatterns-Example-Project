@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, text
+from sqlalchemy import DateTime, Index, String, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -28,8 +28,16 @@ class DeviceRow(Base):
     )
     display_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
     default_config: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
+    device_family: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default="simulation",
+        server_default="simulation",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=text("now()"),
     )
+
+    __table_args__ = (Index("ix_devices_family", "device_family"),)

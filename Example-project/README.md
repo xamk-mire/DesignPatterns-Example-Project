@@ -1,6 +1,6 @@
 # Smart Greenhouse
 
-Operator dashboard for a smart greenhouse — Phase 2 (Factory Method sensors) on the Phase 1 skeleton.
+Operator dashboard for a smart greenhouse — Phase 3 (Abstract Factory device families) on Phases 1–2.
 
 ## Prerequisites
 
@@ -74,4 +74,4 @@ Swagger `/docs` is disabled on purpose.
 
 Course assignments: [../phases/README.md](../phases/README.md) (also [docs/phases/README.md](docs/phases/README.md)).
 
-Pattern note for this phase: [docs/patterns/factory-method.md](docs/patterns/factory-method.md).
+Pattern notes: [docs/patterns/factory-method.md](docs/patterns/factory-method.md), [docs/patterns/abstract-factory.md](docs/patterns/abstract-factory.md).
