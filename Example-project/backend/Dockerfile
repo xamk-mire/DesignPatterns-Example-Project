@@ -5,6 +5,7 @@ COPY src ./src
 COPY alembic ./alembic
 COPY alembic.ini ./
 COPY tests ./tests
+COPY scripts ./scripts
 RUN pip install --no-cache-dir -e ".[dev]"
 ENV PYTHONPATH=/app/src
 WORKDIR /app

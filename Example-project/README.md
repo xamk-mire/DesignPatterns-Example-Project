@@ -1,6 +1,6 @@
 # Smart Greenhouse
 
-Operator dashboard for a smart greenhouse — Phase 3 (Abstract Factory device families) on Phases 1–2.
+Operator dashboard for a smart greenhouse — Phase 4 (Builder location configuration) on Phases 1–3.
 
 ## Prerequisites
 
@@ -50,13 +50,25 @@ docker compose exec backend alembic revision --autogenerate -m "message"
 docker compose exec backend alembic upgrade head
 ```
 
-Tests:
+Tests use a separate `greenhouse_test` database and do not write to the dashboard database:
 
 ```powershell
 docker compose exec backend pytest tests -q
 ```
 
-Host venv remains valid for unit tests (`cd backend` then `pytest`).
+Host venv remains valid (`cd backend` then `pytest`).
+
+Reset the dashboard database to the Lab Site seed (this replaces rows already stored in `greenhouse`):
+
+```powershell
+cd backend
+$env:PYTHONPATH = "src"
+python scripts/reset_db.py
+```
+
+```powershell
+docker compose exec backend python scripts/reset_db.py
+```
 
 ## URLs
 
@@ -74,4 +86,4 @@ Swagger `/docs` is disabled on purpose.
 
 Course assignments: [../phases/README.md](../phases/README.md) (also [docs/phases/README.md](docs/phases/README.md)).
 
-Pattern notes: [docs/patterns/factory-method.md](docs/patterns/factory-method.md), [docs/patterns/abstract-factory.md](docs/patterns/abstract-factory.md).
+Pattern notes: [docs/patterns/factory-method.md](docs/patterns/factory-method.md), [docs/patterns/abstract-factory.md](docs/patterns/abstract-factory.md), [docs/patterns/builder.md](docs/patterns/builder.md).

@@ -79,3 +79,152 @@ export async function provisionDeviceFamily(family: DeviceFamily): Promise<Devic
   }
   return (await response.json()) as DeviceDto[];
 }
+
+export type ZoneInput = {
+  name: string;
+  moisture_threshold_low: number;
+  moisture_threshold_high: number;
+  schedule?: Record<string, unknown>;
+};
+
+export type BuildLocationConfigRequest = {
+  location_name: string;
+  zones: ZoneInput[];
+};
+
+export type LocationSummary = { id: string; name: string };
+
+export type ZoneDto = {
+  id: string;
+  location_id: string;
+  name: string;
+  moisture_threshold_low: number;
+  moisture_threshold_high: number;
+  schedule: Record<string, unknown>;
+};
+
+export type LocationConfigDto = {
+  location: LocationSummary;
+  zones: ZoneDto[];
+};
+
+export async function createLocationConfig(
+  body: BuildLocationConfigRequest,
+): Promise<LocationConfigDto> {
+  const response = await fetch(`${API_BASE_URL}/api/locations/config`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    let message = `Failed to save location config (${response.status})`;
+    try {
+      const payload = (await response.json()) as { detail?: unknown };
+      if (typeof payload.detail === "string") {
+        message = payload.detail;
+      }
+    } catch {
+      /* keep the status message */
+    }
+    throw new Error(message);
+  }
+  return (await response.json()) as LocationConfigDto;
+}
+
+async function errorMessage(response: Response, fallback: string): Promise<string> {
+  try {
+    const payload = (await response.json()) as { detail?: unknown };
+    if (typeof payload.detail === "string") {
+      return payload.detail;
+    }
+  } catch {
+    /* keep the fallback */
+  }
+  return fallback;
+}
+
+export async function fetchLocations(): Promise<LocationSummary[]> {
+  const response = await fetch(`${API_BASE_URL}/api/locations`);
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to list locations (${response.status})`));
+  }
+  return (await response.json()) as LocationSummary[];
+}
+
+export async function fetchLocationConfig(locationId: string): Promise<LocationConfigDto> {
+  const response = await fetch(`${API_BASE_URL}/api/locations/${locationId}/config`);
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to load location (${response.status})`));
+  }
+  return (await response.json()) as LocationConfigDto;
+}
+
+export async function deleteLocation(locationId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/locations/${locationId}`, { method: "DELETE" });
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to delete location (${response.status})`));
+  }
+}
+
+export async function addZone(locationId: string, zone: ZoneInput): Promise<ZoneDto> {
+  const response = await fetch(`${API_BASE_URL}/api/locations/${locationId}/zones`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(zone),
+  });
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to add zone (${response.status})`));
+  }
+  return (await response.json()) as ZoneDto;
+}
+
+export async function updateZone(locationId: string, zoneId: string, zone: ZoneInput): Promise<ZoneDto> {
+  const response = await fetch(`${API_BASE_URL}/api/locations/${locationId}/zones/${zoneId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(zone),
+  });
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to update zone (${response.status})`));
+  }
+  return (await response.json()) as ZoneDto;
+}
+
+export async function deleteZone(locationId: string, zoneId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/locations/${locationId}/zones/${zoneId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to delete zone (${response.status})`));
+  }
+}
+
+export async function fetchZoneDevices(locationId: string, zoneId: string): Promise<DeviceDto[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/locations/${locationId}/zones/${zoneId}/devices`,
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to list zone devices (${response.status})`);
+  }
+  return (await response.json()) as DeviceDto[];
+}
+
+export async function assignDeviceZone(deviceId: string, zoneId: string | null): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/devices/${deviceId}/zone`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ zone_id: zoneId }),
+  });
+  if (!response.ok) {
+    let message = `Failed to assign zone (${response.status})`;
+    try {
+      const payload = (await response.json()) as { detail?: unknown };
+      if (typeof payload.detail === "string") {
+        message = payload.detail;
+      }
+    } catch {
+      /* keep the status message */
+    }
+    throw new Error(message);
+  }
+}

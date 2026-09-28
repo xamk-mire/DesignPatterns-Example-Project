@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy.orm import Session
 
 from domain.devices.entity import Device
@@ -69,17 +71,44 @@ class DeviceRepository:
             self._session.refresh(row)
         return [self._to_device(row) for row in rows]
 
+    def get_device(self, device_id: UUID) -> Device | None:
+        row = self._session.get(DeviceRow, device_id)
+        if row is None:
+            return None
+        return self._to_device(row)
+
+    def set_zone(
+        self,
+        device_id: UUID,
+        *,
+        zone_id: UUID | None,
+        location_id: UUID | None,
+    ) -> None:
+        row = self._session.get(DeviceRow, device_id)
+        if row is None:
+            raise LookupError("Device not found")
+        row.zone_id = zone_id
+        row.location_id = location_id
+        try:
+            self._session.commit()
+        except Exception:
+            self._session.rollback()
+            raise
+
     def list_devices(
         self,
         *,
         device_family: str | None = None,
         role: str | None = None,
+        zone_id: UUID | None = None,
     ) -> list[Device]:
         query = self._session.query(DeviceRow)
         if device_family is not None:
             query = query.filter(DeviceRow.device_family == device_family)
         if role is not None:
             query = query.filter(DeviceRow.role == role)
+        if zone_id is not None:
+            query = query.filter(DeviceRow.zone_id == zone_id)
         rows = query.order_by(DeviceRow.created_at.desc()).all()
         return [self._to_device(row) for row in rows]
 
