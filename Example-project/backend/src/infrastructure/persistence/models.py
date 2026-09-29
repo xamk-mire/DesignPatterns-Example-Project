@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, Numeric, String, UniqueConstraint, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, Numeric, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -43,6 +43,18 @@ class DeviceRow(Base):
         UUID(as_uuid=True),
         ForeignKey("zones.id", name="fk_devices_zone_id", ondelete="SET NULL"),
         nullable=True,
+    )
+    sampling_interval_seconds: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=300,
+        server_default=text("300"),
+    )
+    tracking_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=text("true"),
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -93,4 +105,27 @@ class ZoneRow(Base):
     __table_args__ = (
         Index("ix_zones_location_id", "location_id"),
         UniqueConstraint("location_id", "name", name="uq_zones_location_id_name"),
+    )
+
+
+class ReadingRow(Base):
+    __tablename__ = "sensor_readings"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("devices.id", name="fk_sensor_readings_device_id"),
+        nullable=False,
+    )
+    value: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    unit: Mapped[str] = mapped_column(String(32), nullable=False)
+    source: Mapped[str] = mapped_column(String(32), nullable=False)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (
+        Index("ix_sensor_readings_device_recorded", "device_id", recorded_at.desc()),
     )

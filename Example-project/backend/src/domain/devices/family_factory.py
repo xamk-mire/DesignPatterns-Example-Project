@@ -51,7 +51,7 @@ class SimulationDeviceFactory(DeviceFamilyFactory):
         return "simulation"
 
     def create_device_set(self) -> list[Device]:
-        protocol = "sim"
+        protocol = "simulation"
         prefix = "Sim"
         moisture = MoistureSensorCreator().create_sensor()
         light = LightSensorCreator().create_sensor()
@@ -69,7 +69,7 @@ class EdgeHardwareFactory(DeviceFamilyFactory):
         return "edge"
 
     def create_device_set(self) -> list[Device]:
-        protocol = "gpio-stub"
+        protocol = "mqtt"
         prefix = "Edge"
         moisture = MoistureSensorCreator().create_sensor()
         light = LightSensorCreator().create_sensor()

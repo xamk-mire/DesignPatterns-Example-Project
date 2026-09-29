@@ -27,6 +27,7 @@ def _read_database_url() -> str:
 os.environ["DATABASE_URL"] = make_url(_read_database_url()).set(database=_TEST_DATABASE).render_as_string(
     hide_password=False
 )
+os.environ["GREENHOUSE_DISABLE_SAMPLER"] = "1"
 
 import pytest  # noqa: E402
 from alembic import command  # noqa: E402

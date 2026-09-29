@@ -15,6 +15,17 @@ export type SensorDto = {
   device_type: string;
   display_name: string;
   default_config: Record<string, unknown>;
+  sampling_interval_seconds: number;
+  tracking_enabled: boolean;
+  zone_name: string | null;
+};
+
+export type ReadingDto = {
+  device_id: string;
+  value: number;
+  unit: string;
+  source: string;
+  recorded_at: string;
 };
 
 export async function fetchSensors(): Promise<SensorDto[]> {
@@ -23,6 +34,40 @@ export async function fetchSensors(): Promise<SensorDto[]> {
     throw new Error(`Failed to list sensors (${response.status})`);
   }
   return (await response.json()) as SensorDto[];
+}
+
+export async function readSensor(sensorId: string): Promise<ReadingDto> {
+  const response = await fetch(`${API_BASE_URL}/api/sensors/${sensorId}/read`, { method: "POST" });
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to read sensor (${response.status})`));
+  }
+  return (await response.json()) as ReadingDto;
+}
+
+export async function fetchSensorReadings(sensorId: string, limit = 1): Promise<ReadingDto[]> {
+  const response = await fetch(`${API_BASE_URL}/api/sensors/${sensorId}/readings?limit=${limit}`);
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to load readings (${response.status})`));
+  }
+  return (await response.json()) as ReadingDto[];
+}
+
+export async function updateSampling(
+  deviceId: string,
+  samplingIntervalSeconds: number,
+  trackingEnabled: boolean,
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/devices/${deviceId}/sampling`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sampling_interval_seconds: samplingIntervalSeconds,
+      tracking_enabled: trackingEnabled,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to update sampling (${response.status})`));
+  }
 }
 
 export async function createSensor(type: string, displayName?: string | null): Promise<SensorDto> {

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from domain.devices.entity import Device
 from domain.sensors.entity import Sensor
-from infrastructure.persistence.models import DeviceRow
+from infrastructure.persistence.models import DeviceRow, ZoneRow
 
 
 class DeviceRepository:
@@ -12,6 +12,8 @@ class DeviceRepository:
         self._session = session
 
     def save_sensor(self, sensor: Sensor) -> Sensor:
+        config = dict(sensor.default_config)
+        config.setdefault("protocol", "simulation")
         device = self.save_device(
             Device(
                 id=None,
@@ -19,7 +21,7 @@ class DeviceRepository:
                 role="sensor",
                 device_family="simulation",
                 display_name=sensor.display_name,
-                default_config=sensor.default_config,
+                default_config=config,
             )
         )
         return Sensor(
@@ -29,17 +31,15 @@ class DeviceRepository:
             default_config=device.default_config,
         )
 
-    def list_sensors(self) -> list[Sensor]:
-        devices = self.list_devices(role="sensor")
-        return [
-            Sensor(
-                id=device.id,
-                device_type=device.device_type,
-                display_name=device.display_name,
-                default_config=device.default_config,
-            )
-            for device in devices
-        ]
+    def list_sensors(self) -> list[tuple[Device, str | None]]:
+        rows = (
+            self._session.query(DeviceRow, ZoneRow.name)
+            .outerjoin(ZoneRow, DeviceRow.zone_id == ZoneRow.id)
+            .filter(DeviceRow.role == "sensor")
+            .order_by(DeviceRow.created_at.desc())
+            .all()
+        )
+        return [(self._to_device(row), zone_name) for row, zone_name in rows]
 
     def save_device(self, device: Device) -> Device:
         row = DeviceRow(
@@ -48,6 +48,8 @@ class DeviceRepository:
             device_family=device.device_family,
             display_name=device.display_name,
             default_config=device.default_config,
+            sampling_interval_seconds=_interval_from_config(device.default_config),
+            tracking_enabled=device.tracking_enabled,
         )
         self._session.add(row)
         self._session.commit()
@@ -62,6 +64,8 @@ class DeviceRepository:
                 device_family=device.device_family,
                 display_name=device.display_name,
                 default_config=device.default_config,
+                sampling_interval_seconds=_interval_from_config(device.default_config),
+                tracking_enabled=device.tracking_enabled,
             )
             for device in devices
         ]
@@ -95,6 +99,32 @@ class DeviceRepository:
             self._session.rollback()
             raise
 
+    def update_sampling(
+        self,
+        device_id: UUID,
+        *,
+        sampling_interval_seconds: int,
+        tracking_enabled: bool,
+    ) -> Device | None:
+        row = self._session.get(DeviceRow, device_id)
+        if row is None:
+            return None
+        row.sampling_interval_seconds = sampling_interval_seconds
+        row.tracking_enabled = tracking_enabled
+        self._session.commit()
+        self._session.refresh(row)
+        return self._to_device(row)
+
+    def list_tracked_simulation_sensors(self) -> list[Device]:
+        rows = (
+            self._session.query(DeviceRow)
+            .filter(DeviceRow.role == "sensor")
+            .filter(DeviceRow.tracking_enabled.is_(True))
+            .filter(DeviceRow.default_config["protocol"].astext == "simulation")
+            .all()
+        )
+        return [self._to_device(row) for row in rows]
+
     def list_devices(
         self,
         *,
@@ -121,4 +151,13 @@ class DeviceRepository:
             device_family=row.device_family,
             display_name=row.display_name or "",
             default_config=dict(row.default_config or {}),
+            sampling_interval_seconds=row.sampling_interval_seconds,
+            tracking_enabled=row.tracking_enabled,
         )
+
+
+def _interval_from_config(config: dict) -> int:
+    raw = (config or {}).get("sampling_interval_seconds")
+    if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+        return 300
+    return int(raw)

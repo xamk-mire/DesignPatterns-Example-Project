@@ -1,3 +1,4 @@
+from domain.devices.entity import Device
 from domain.sensors.creators import get_creator
 from domain.sensors.entity import Sensor
 from infrastructure.persistence.device_repository import DeviceRepository
@@ -12,5 +13,5 @@ class SensorService:
         prototype = creator.create_sensor(display_name=display_name)
         return self._repo.save_sensor(prototype)
 
-    def list_sensors(self) -> list[Sensor]:
+    def list_sensors(self) -> list[tuple[Device, str | None]]:
         return self._repo.list_sensors()

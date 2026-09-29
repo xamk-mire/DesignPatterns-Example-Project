@@ -22,8 +22,8 @@ def test_edge_factory_differs_from_simulation() -> None:
     sim_protocol = simulation[0].default_config["protocol"]
     edge_protocol = edge[0].default_config["protocol"]
     assert sim_protocol != edge_protocol
-    assert sim_protocol == "sim"
-    assert edge_protocol == "gpio-stub"
+    assert sim_protocol == "simulation"
+    assert edge_protocol == "mqtt"
 
 
 def test_unknown_family_raises() -> None:

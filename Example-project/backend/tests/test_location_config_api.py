@@ -42,7 +42,7 @@ def test_create_and_get_location_config() -> None:
     assert {zone["location_id"] for zone in again["zones"]} == {location_id}
     listed = client.get("/api/locations")
     assert listed.status_code == 200, listed.text
-    assert "Lab Site" in {item["name"] for item in listed.json()}
+    assert "Lab Site Seed" in {item["name"] for item in listed.json()}
 
 
 def test_create_config_rejects_invalid_thresholds() -> None:
