@@ -14,7 +14,7 @@ from infrastructure.persistence.device_repository import DeviceRepository
 from infrastructure.persistence.location_repository import LocationRepository
 
 TRUNCATE_BUSINESS_TABLES = (
-    "TRUNCATE TABLE sensor_readings, devices, zones, locations RESTART IDENTITY CASCADE"
+    "TRUNCATE TABLE sensor_readings, devices, automation_rules, zones, locations RESTART IDENTITY CASCADE"
 )
 
 

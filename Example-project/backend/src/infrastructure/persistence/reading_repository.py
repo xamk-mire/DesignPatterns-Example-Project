@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from domain.sensors.reading import Reading
-from infrastructure.persistence.models import ReadingRow
+from infrastructure.persistence.models import DeviceRow, ReadingRow
 
 
 class ReadingRepository:
@@ -44,6 +44,19 @@ class ReadingRepository:
         if row is None:
             return None
         return row[0]
+
+    def latest_moisture_for_zone(self, zone_id: UUID) -> float | None:
+        row = (
+            self._session.query(ReadingRow.value)
+            .join(DeviceRow, DeviceRow.id == ReadingRow.device_id)
+            .filter(DeviceRow.zone_id == zone_id)
+            .filter(DeviceRow.device_type == "moisture_sensor")
+            .order_by(ReadingRow.recorded_at.desc())
+            .first()
+        )
+        if row is None:
+            return None
+        return float(row[0])
 
 
 def _to_reading(row: ReadingRow) -> Reading:

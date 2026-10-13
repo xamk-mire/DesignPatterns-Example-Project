@@ -1,0 +1,1 @@
+"""Irrigation strategy application service."""

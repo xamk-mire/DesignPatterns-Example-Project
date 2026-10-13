@@ -254,6 +254,34 @@ export async function fetchZoneDevices(locationId: string, zoneId: string): Prom
   return (await response.json()) as DeviceDto[];
 }
 
+export type EvaluationDto = {
+  location_id: string;
+  strategy_key: string;
+  action: string;
+  reason: string;
+};
+
+export async function saveStrategy(locationId: string, strategyKey: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/locations/${locationId}/automation`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ strategy_key: strategyKey }),
+  });
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to save strategy (${response.status})`));
+  }
+}
+
+export async function evaluateStrategy(locationId: string): Promise<EvaluationDto> {
+  const response = await fetch(`${API_BASE_URL}/api/locations/${locationId}/automation/evaluate`, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to evaluate (${response.status})`));
+  }
+  return (await response.json()) as EvaluationDto;
+}
+
 export async function assignDeviceZone(deviceId: string, zoneId: string | null): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/devices/${deviceId}/zone`, {
     method: "PATCH",
