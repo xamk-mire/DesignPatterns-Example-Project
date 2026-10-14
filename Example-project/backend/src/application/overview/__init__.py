@@ -1,0 +1,1 @@
+"""Location overview read model."""

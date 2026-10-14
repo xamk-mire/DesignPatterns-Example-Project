@@ -272,6 +272,47 @@ export async function saveStrategy(locationId: string, strategyKey: string): Pro
   }
 }
 
+export type OverviewReading = {
+  device_id: string;
+  value: number;
+  unit: string;
+  recorded_at: string;
+  tracking_enabled: boolean;
+  sampling_interval_seconds: number;
+};
+
+export type OverviewDevice = {
+  id: string;
+  device_type: string;
+  role: string;
+  display_name: string;
+};
+
+export type OverviewZone = {
+  id: string;
+  name: string;
+  moisture_threshold_low: number;
+  moisture_threshold_high: number;
+  devices: OverviewDevice[];
+  latest_readings: OverviewReading[];
+};
+
+export type LocationOverview = {
+  location: LocationSummary;
+  device_counts: { sensor: number; actuator: number };
+  zones: OverviewZone[];
+  strategy_key: string | null;
+  last_recommendation: { action: string; reason: string } | null;
+};
+
+export async function fetchOverview(locationId: string): Promise<LocationOverview> {
+  const response = await fetch(`${API_BASE_URL}/api/locations/${locationId}/overview`);
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to load overview (${response.status})`));
+  }
+  return (await response.json()) as LocationOverview;
+}
+
 export async function evaluateStrategy(locationId: string): Promise<EvaluationDto> {
   const response = await fetch(`${API_BASE_URL}/api/locations/${locationId}/automation/evaluate`, {
     method: "POST",

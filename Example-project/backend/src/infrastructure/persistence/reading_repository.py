@@ -58,6 +58,18 @@ class ReadingRepository:
             return None
         return float(row[0])
 
+    def latest_for_devices(self, device_ids: list[UUID]) -> list[Reading]:
+        if not device_ids:
+            return []
+        rows = (
+            self._session.query(ReadingRow)
+            .filter(ReadingRow.device_id.in_(device_ids))
+            .distinct(ReadingRow.device_id)
+            .order_by(ReadingRow.device_id, ReadingRow.recorded_at.desc())
+            .all()
+        )
+        return [_to_reading(row) for row in rows]
+
 
 def _to_reading(row: ReadingRow) -> Reading:
     return Reading(

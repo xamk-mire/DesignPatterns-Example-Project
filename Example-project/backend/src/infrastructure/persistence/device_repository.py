@@ -142,6 +142,16 @@ class DeviceRepository:
         rows = query.order_by(DeviceRow.created_at.desc()).all()
         return [self._to_device(row) for row in rows]
 
+    def list_assigned(self, location_id: UUID) -> list[Device]:
+        rows = (
+            self._session.query(DeviceRow)
+            .filter(DeviceRow.location_id == location_id)
+            .filter(DeviceRow.zone_id.is_not(None))
+            .order_by(DeviceRow.created_at.desc())
+            .all()
+        )
+        return [self._to_device(row) for row in rows]
+
     @staticmethod
     def _to_device(row: DeviceRow) -> Device:
         return Device(
@@ -153,6 +163,7 @@ class DeviceRepository:
             default_config=dict(row.default_config or {}),
             sampling_interval_seconds=row.sampling_interval_seconds,
             tracking_enabled=row.tracking_enabled,
+            zone_id=row.zone_id,
         )
 
 
