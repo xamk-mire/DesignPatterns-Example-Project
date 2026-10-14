@@ -57,6 +57,37 @@ export function OverviewPanel() {
 
   return (
     <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <article className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          <h4 className="font-medium text-slate-800">Assigned devices</h4>
+          <p className="mt-1">
+            Counts sensors and actuators that belong to the selected location and a zone. Each zone card lists
+            those devices and the newest stored reading.
+          </p>
+          <p className="mt-1 text-slate-600">
+            Bench 1 with one moisture sensor and one pump, while a light sensor stays unassigned, shows 1
+            sensor and 1 actuator. The zone card lists the sensor and the pump.
+          </p>
+        </article>
+        <article className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          <h4 className="font-medium text-slate-800">Strategy</h4>
+          <p className="mt-1">
+            Shows the irrigation key saved for this location, and the recommendation that key would make from
+            the latest moisture reading in each zone.
+          </p>
+          <p className="mt-1 text-slate-600">
+            With conservative saved, Bench 1 low 0.20, and moisture 0.15, the line reads irrigate — Bench 1:
+            Moisture 0.15 is below 0.20. With no saved key the panel says No strategy saved and No
+            recommendation yet.
+          </p>
+        </article>
+      </div>
+      <p className="text-sm text-slate-600">
+        Changing the location loads that summary. Refresh loads it again. Devices with no zone stay out of the
+        counts and the zone cards. A device with no stored reading shows No reading yet. When a reading exists
+        and tracking is off, the line adds “tracking off” beside the sampling interval. When more than one zone
+        would irrigate, the recommendation names the first of those zones.
+      </p>
       <div className="flex flex-wrap items-end gap-2">
         <label className="block min-w-48 flex-1 text-sm text-slate-700">
           Location

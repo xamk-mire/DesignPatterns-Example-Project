@@ -265,6 +265,32 @@ export function LocationConfigWizard({
 
   return (
     <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <article className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          <h4 className="font-medium text-slate-800">Thresholds</h4>
+          <p className="mt-1">
+            Each zone stores a low and a high moisture limit. Both values are between 0 and 1, and low is
+            strictly less than high.
+          </p>
+          <p className="mt-1 text-slate-600">
+            The form starts at low 0.20 and high 0.45. In Automation, conservative irrigates when the latest
+            moisture is below 0.20. Aggressive irrigates when it is below the midpoint, 0.33.
+          </p>
+        </article>
+        <article className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          <h4 className="font-medium text-slate-800">Watering time</h4>
+          <p className="mt-1">Each zone stores a watering time on its schedule. The form starts at 08:00.</p>
+          <p className="mt-1 text-slate-600">
+            Saving Bench 1 at 08:00 writes schedule.watering as 08:00. Automation Evaluate reads the moisture
+            thresholds.
+          </p>
+        </article>
+      </div>
+      <p className="text-sm text-slate-600">
+        Save location creates a new site. It needs a name and at least one zone, and zone names are unique
+        inside that site. Select a saved location to edit its zones, add a zone, or delete one. Deleting a zone
+        unassigns its devices. A location keeps at least one zone.
+      </p>
       <div className="space-y-2">
         <p className="text-sm font-medium text-slate-800">Saved locations</p>
         {locations.length === 0 ? (

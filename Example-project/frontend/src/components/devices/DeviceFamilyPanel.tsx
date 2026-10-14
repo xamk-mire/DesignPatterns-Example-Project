@@ -18,6 +18,25 @@ type Props = {
   onAssigned: () => void;
 };
 
+const FAMILIES = [
+  {
+    key: "simulation" as const,
+    title: "Simulation",
+    summary:
+      "Provision adds one matching kit: Sim soil moisture sensor, Sim grow light sensor, Sim irrigation pump, and Sim grow light. The sensors use the simulation protocol.",
+    example:
+      "After one click the list shows those four devices. Read now on Sim soil moisture sensor stores a vwc reading. The pump and the grow light are actuators.",
+  },
+  {
+    key: "edge" as const,
+    title: "Edge",
+    summary:
+      "Provision adds the same four roles with Edge names and the mqtt protocol: Edge soil moisture sensor, Edge grow light sensor, Edge irrigation pump, and Edge grow light.",
+    example:
+      "Those sensors stay out of automatic sampling. Read now is refused until an MQTT payload is translated.",
+  },
+];
+
 export function DeviceFamilyPanel({ catalogVersion, onAssigned }: Props) {
   const [family, setFamily] = useState<DeviceFamily>("simulation");
   const [devices, setDevices] = useState<DeviceDto[]>([]);
@@ -105,6 +124,30 @@ export function DeviceFamilyPanel({ catalogVersion, onAssigned }: Props) {
   return (
     <div className="space-y-3">
       <DeviceFamilySwitcher family={family} onChange={setFamily} />
+      <div className="grid gap-3 sm:grid-cols-2">
+        {FAMILIES.map((item) => {
+          const selected = item.key === family;
+          return (
+            <article
+              key={item.key}
+              className={
+                selected
+                  ? "rounded-md border border-emerald-600 bg-emerald-50 px-3 py-2 text-sm text-slate-700"
+                  : "rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700"
+              }
+            >
+              <h4 className="font-medium text-slate-800">{item.title}</h4>
+              <p className="mt-1">{item.summary}</p>
+              <p className="mt-1 text-slate-600">{item.example}</p>
+            </article>
+          );
+        })}
+      </div>
+      <p className="text-sm text-slate-600">
+        Each Provision adds another kit of four and leaves earlier kits in place. The switcher only changes
+        which family is listed. Save a location in Configuration before assigning a zone. Each option is the
+        location name and the zone name. Unassigned removes the device from every zone.
+      </p>
       <button
         type="button"
         className="rounded-md bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"

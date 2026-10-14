@@ -101,6 +101,35 @@ export function SensorList() {
 
   return (
     <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <article className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          <h4 className="font-medium text-slate-800">Moisture</h4>
+          <p className="mt-1">
+            A new sensor is named Soil moisture sensor and stores volumetric water content (vwc). Tracking
+            starts on, and the sampling interval is 300 seconds.
+          </p>
+          <p className="mt-1 text-slate-600">
+            Read now stores one value between 0.20 and 0.60 vwc. With tracking on, the sampler stores the next
+            reading only after 300 seconds.
+          </p>
+        </article>
+        <article className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+          <h4 className="font-medium text-slate-800">Light</h4>
+          <p className="mt-1">
+            A new sensor is named Grow light sensor and stores illuminance in lux. Tracking starts on, and the
+            sampling interval is 60 seconds.
+          </p>
+          <p className="mt-1 text-slate-600">
+            Read now stores one value between 200 and 2000 lux. With tracking on, the sampler stores the next
+            reading only after 60 seconds.
+          </p>
+        </article>
+      </div>
+      <p className="text-sm text-slate-600">
+        Save sampling applies the interval and the tracking checkbox. The shortest interval is 5 seconds. This
+        list reloads the latest stored value about every 5 seconds. Sensors from an Edge kit also appear here;
+        Read now on those is refused because they wait for an MQTT payload.
+      </p>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
