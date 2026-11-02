@@ -10,11 +10,12 @@ from application.devices.family_service import DeviceFamilyService
 from application.locations.config_service import LocationConfigService
 from application.locations.dto import BuildLocationConfigRequestDto, ZoneRequestDto
 from application.locations.zone_assignment_service import ZoneAssignmentService
+from infrastructure.persistence.actuator_state_repository import ActuatorStateRepository
 from infrastructure.persistence.device_repository import DeviceRepository
 from infrastructure.persistence.location_repository import LocationRepository
 
 TRUNCATE_BUSINESS_TABLES = (
-    "TRUNCATE TABLE sensor_readings, devices, automation_rules, zones, locations RESTART IDENTITY CASCADE"
+    "TRUNCATE TABLE sensor_readings, actuator_states, devices, automation_rules, zones, locations RESTART IDENTITY CASCADE"
 )
 
 
@@ -52,7 +53,8 @@ def seed_database(session: Session) -> SeedData:
             ],
         )
     )
-    devices = DeviceFamilyService(DeviceRepository(session)).provision_family("simulation")
+    device_repo = DeviceRepository(session)
+    devices = DeviceFamilyService(device_repo, ActuatorStateRepository(session)).provision_family("simulation")
     moisture = next(device for device in devices if device.device_type == "moisture_sensor")
     light = next(device for device in devices if device.device_type == "light_sensor")
     bench_1 = next(zone for zone in saved.zones if zone.name == "Bench 1")

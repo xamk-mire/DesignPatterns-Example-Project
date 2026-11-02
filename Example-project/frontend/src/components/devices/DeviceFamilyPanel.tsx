@@ -7,6 +7,7 @@ import {
   fetchLocations,
   fetchZoneDevices,
   provisionDeviceFamily,
+  transitionDevice,
   type DeviceDto,
   type DeviceFamily,
 } from "../../services/api";
@@ -47,6 +48,7 @@ export function DeviceFamilyPanel({ catalogVersion, onAssigned }: Props) {
   const [assignError, setAssignError] = useState<string | null>(null);
   const [provisioning, setProvisioning] = useState(false);
   const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [transitioningId, setTransitioningId] = useState<string | null>(null);
 
   const load = useCallback(async (selected: DeviceFamily) => {
     setLoading(true);
@@ -104,6 +106,19 @@ export function DeviceFamilyPanel({ catalogVersion, onAssigned }: Props) {
       setError(err instanceof Error ? err.message : "Failed to provision kit");
     } finally {
       setProvisioning(false);
+    }
+  }
+
+  async function transition(deviceId: string, target: string) {
+    setTransitioningId(deviceId);
+    setError(null);
+    try {
+      await transitionDevice(deviceId, target);
+      await load(family);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to change state");
+    } finally {
+      setTransitioningId(null);
     }
   }
 
@@ -174,6 +189,8 @@ export function DeviceFamilyPanel({ catalogVersion, onAssigned }: Props) {
         zoneByDeviceId={zoneByDeviceId}
         assigningId={assigningId}
         onAssign={zoneGroups.length > 0 ? (deviceId, zoneId) => void assign(deviceId, zoneId) : undefined}
+        transitioningId={transitioningId}
+        onTransition={(deviceId, target) => void transition(deviceId, target)}
       />
     </div>
   );

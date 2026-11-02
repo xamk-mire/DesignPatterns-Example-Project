@@ -10,3 +10,6 @@ class DeviceDto(BaseModel):
     device_family: str
     display_name: str
     default_config: dict = Field(default_factory=dict)
+    state: str | None = None
+    allowed_commands: list[str] = Field(default_factory=list)
+    allowed_targets: list[str] = Field(default_factory=list)

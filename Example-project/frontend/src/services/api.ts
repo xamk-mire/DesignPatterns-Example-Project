@@ -92,6 +92,9 @@ export type DeviceDto = {
   device_family: string;
   display_name: string;
   default_config: Record<string, unknown>;
+  state?: string | null;
+  allowed_commands?: string[];
+  allowed_targets?: string[];
 };
 
 export async function fetchDevices(filters?: {
@@ -111,6 +114,18 @@ export async function fetchDevices(filters?: {
     throw new Error(`Failed to list devices (${response.status})`);
   }
   return (await response.json()) as DeviceDto[];
+}
+
+export async function transitionDevice(deviceId: string, target: string): Promise<DeviceDto> {
+  const response = await fetch(`${API_BASE_URL}/api/devices/${deviceId}/transition`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ target }),
+  });
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to change state (${response.status})`));
+  }
+  return (await response.json()) as DeviceDto;
 }
 
 export async function provisionDeviceFamily(family: DeviceFamily): Promise<DeviceDto[]> {

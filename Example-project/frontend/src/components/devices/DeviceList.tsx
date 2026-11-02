@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import type { DeviceDto } from "../../services/api";
 
 export type ZoneOption = { id: string; name: string; locationName: string };
@@ -12,6 +14,8 @@ type Props = {
   zoneByDeviceId?: Record<string, string>;
   assigningId?: string | null;
   onAssign?: (deviceId: string, zoneId: string | null) => void;
+  transitioningId?: string | null;
+  onTransition?: (deviceId: string, target: string) => void;
 };
 
 export function zoneLabel(locationName: string, zoneName: string): string {
@@ -22,6 +26,77 @@ function roleBadge(role: string): string {
   return role === "actuator"
     ? "bg-amber-50 text-amber-800 ring-amber-200"
     : "bg-sky-50 text-sky-800 ring-sky-200";
+}
+
+function stateBadge(state: string): string {
+  if (state === "running") {
+    return "bg-emerald-50 text-emerald-800 ring-emerald-200";
+  }
+  if (state === "error") {
+    return "bg-red-50 text-red-800 ring-red-200";
+  }
+  if (state === "maintenance") {
+    return "bg-amber-50 text-amber-800 ring-amber-200";
+  }
+  return "bg-slate-100 text-slate-700 ring-slate-200";
+}
+
+function ActuatorControls({
+  device,
+  busy,
+  onTransition,
+}: {
+  device: DeviceDto;
+  busy: boolean;
+  onTransition: (deviceId: string, target: string) => void;
+}) {
+  const targets = device.allowed_targets ?? [];
+  const targetKey = targets.join(",");
+  const [target, setTarget] = useState(targets[0] ?? "");
+
+  useEffect(() => {
+    const next = targetKey.split(",").filter(Boolean);
+    setTarget(next[0] ?? "");
+  }, [device.state, targetKey]);
+
+  if (!device.state) {
+    return null;
+  }
+  const commands = (device.allowed_commands ?? []).join(", ") || "No commands";
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2">
+      <span
+        title={commands}
+        className={`rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${stateBadge(device.state)}`}
+      >
+        {device.state}
+      </span>
+      {targets.length > 0 && onTransition ? (
+        <>
+          <select
+            className="rounded-md border border-slate-200 bg-white px-2 py-1 text-sm text-slate-800"
+            value={target}
+            disabled={busy}
+            onChange={(event) => setTarget(event.target.value)}
+          >
+            {targets.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-800 disabled:opacity-50"
+            disabled={busy || !target}
+            onClick={() => onTransition(device.id, target)}
+          >
+            Apply
+          </button>
+        </>
+      ) : null}
+    </div>
+  );
 }
 
 function familyBadge(family: string): string {
@@ -38,6 +113,8 @@ export function DeviceList({
   zoneByDeviceId,
   assigningId,
   onAssign,
+  transitioningId,
+  onTransition,
 }: Props) {
   if (error) {
     return (
@@ -76,6 +153,13 @@ export function DeviceList({
               </span>
             </div>
             <p className="mt-1 text-slate-500">{device.device_type}</p>
+            {device.role === "actuator" && device.state && onTransition ? (
+              <ActuatorControls
+                device={device}
+                busy={transitioningId === device.id}
+                onTransition={onTransition}
+              />
+            ) : null}
             {zoneGroups && onAssign ? (
               <label className="mt-2 block text-xs text-slate-600">
                 Zone
