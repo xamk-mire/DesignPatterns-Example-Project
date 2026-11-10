@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, Numeric, String, UniqueConstraint, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, Numeric, String, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -164,6 +164,29 @@ class ActuatorStateRow(Base):
     )
     state: Mapped[str] = mapped_column(String(32), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )
+
+
+class ActuatorExecutionLogRow(Base):
+    __tablename__ = "actuator_execution_log"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("devices.id", name="fk_actuator_execution_log_device_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    success: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    policy_applied: Mapped[list] = mapped_column(JSONB, nullable=False)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=text("now()"),

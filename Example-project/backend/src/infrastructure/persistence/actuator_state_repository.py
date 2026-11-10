@@ -16,6 +16,12 @@ class ActuatorStateRepository:
             return None
         return row.state
 
+    def snapshot(self, device_id: UUID) -> tuple[str, datetime] | None:
+        row = self._session.get(ActuatorStateRow, device_id)
+        if row is None:
+            return None
+        return row.state, row.updated_at
+
     def list_for(self, device_ids: list[UUID]) -> dict[UUID, str]:
         if not device_ids:
             return {}
