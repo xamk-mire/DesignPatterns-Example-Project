@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from application.alerts.wiring import get_event_bus
 from application.devices.dto import DeviceDto
 from application.devices.family_service import DeviceFamilyService
 from application.devices.mappers import devices_to_dtos
@@ -26,7 +27,7 @@ def get_device_repository(db: Session = Depends(get_db)) -> DeviceRepository:
 
 
 def get_transition_service(db: Session = Depends(get_db)) -> ActuatorTransitionService:
-    return ActuatorTransitionService(DeviceRepository(db), ActuatorStateRepository(db))
+    return ActuatorTransitionService(DeviceRepository(db), ActuatorStateRepository(db), get_event_bus())
 
 
 def _with_states(devices: list, states: ActuatorStateRepository) -> list[DeviceDto]:

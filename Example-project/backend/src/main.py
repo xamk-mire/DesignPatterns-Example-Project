@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from scalar_fastapi import get_scalar_api_reference
 
+from application.alerts.wiring import get_event_bus
 from application.readings.sampler import SimulationSampler
 from application.readings.service import ReadingIngest
 from infrastructure.db import SessionLocal
@@ -14,6 +15,7 @@ from infrastructure.persistence.device_repository import DeviceRepository
 from infrastructure.persistence.reading_repository import ReadingRepository
 from infrastructure.settings import settings
 from interfaces.api.actuators import router as actuators_router
+from interfaces.api.alerts import router as alerts_router
 from interfaces.api.commands import router as commands_router
 from interfaces.api.automation import router as automation_router
 from interfaces.api.devices import router as devices_router
@@ -29,7 +31,9 @@ async def _sample_loop(stop: asyncio.Event) -> None:
         try:
             devices = DeviceRepository(session)
             readings = ReadingRepository(session)
-            SimulationSampler(devices, readings, ReadingIngest(devices, readings)).run_once(
+            SimulationSampler(
+                devices, readings, ReadingIngest(devices, readings, get_event_bus())
+            ).run_once(
                 datetime.now(timezone.utc)
             )
         finally:
@@ -74,6 +78,7 @@ app.include_router(sensors_router)
 app.include_router(devices_router)
 app.include_router(actuators_router)
 app.include_router(commands_router)
+app.include_router(alerts_router)
 app.include_router(locations_router)
 app.include_router(automation_router)
 app.include_router(overview_router)

@@ -235,6 +235,37 @@ async function errorMessage(response: Response, fallback: string): Promise<strin
   return fallback;
 }
 
+export type AlertDto = {
+  id: string;
+  location_id: string | null;
+  zone_id: string | null;
+  device_id: string | null;
+  severity: string;
+  message: string;
+  event_type: string;
+  status: string;
+  created_at: string;
+};
+
+export async function fetchAlerts(filters?: {
+  locationId?: string;
+  zoneId?: string;
+}): Promise<AlertDto[]> {
+  const params = new URLSearchParams();
+  if (filters?.locationId) {
+    params.set("location_id", filters.locationId);
+  }
+  if (filters?.zoneId) {
+    params.set("zone_id", filters.zoneId);
+  }
+  const query = params.toString();
+  const response = await fetch(`${API_BASE_URL}/api/alerts${query ? `?${query}` : ""}`);
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to list alerts (${response.status})`));
+  }
+  return (await response.json()) as AlertDto[];
+}
+
 export async function fetchLocations(): Promise<LocationSummary[]> {
   const response = await fetch(`${API_BASE_URL}/api/locations`);
   if (!response.ok) {

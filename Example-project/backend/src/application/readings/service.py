@@ -2,6 +2,8 @@ from dataclasses import replace
 from datetime import datetime
 from uuid import UUID
 
+from domain.events.bus import EventBus
+from domain.events.events import ReadingCreated
 from domain.sensors.reading import Reading
 from infrastructure.adapters.sensors.selector import AdapterSelectionError, sensor_port_for
 from infrastructure.persistence.device_repository import DeviceRepository
@@ -19,9 +21,15 @@ class ReadingRejected(Exception):
 
 
 class ReadingIngest:
-    def __init__(self, devices: DeviceRepository, readings: ReadingRepository) -> None:
+    def __init__(
+        self,
+        devices: DeviceRepository,
+        readings: ReadingRepository,
+        bus: EventBus | None = None,
+    ) -> None:
         self._devices = devices
         self._readings = readings
+        self._bus = bus
 
     def take_reading(self, device_id: UUID, recorded_at: datetime | None = None) -> ReadingDto:
         device = self._devices.get_device(device_id)
@@ -34,14 +42,39 @@ class ReadingIngest:
             raise ReadingRejected(str(exc)) from exc
         if recorded_at is not None:
             reading = replace(reading, recorded_at=recorded_at)
-        return _to_dto(self._readings.insert(reading))
+        return self._store(device, reading)
 
     def record(self, device_id: UUID, reading: Reading) -> ReadingDto:
-        if self._devices.get_device(device_id) is None:
+        device = self._devices.get_device(device_id)
+        if device is None:
             raise DeviceNotFound("Device not found")
         if reading.device_id != device_id:
             raise ReadingRejected("Reading device_id does not match")
-        return _to_dto(self._readings.insert(reading))
+        return self._store(device, reading)
+
+    def _store(self, device, reading: Reading) -> ReadingDto:
+        stored = self._readings.insert(reading)
+        if device.tracking_enabled and device.id is not None:
+            self._publish(
+                ReadingCreated(
+                    device_id=device.id,
+                    location_id=device.location_id,
+                    zone_id=device.zone_id,
+                    value=stored.value,
+                    unit=stored.unit,
+                    source=stored.source,
+                    recorded_at=stored.recorded_at,
+                )
+            )
+        return _to_dto(stored)
+
+    def _publish(self, event: ReadingCreated) -> None:
+        bus = self._bus
+        if bus is None:
+            from application.alerts.wiring import get_event_bus
+
+            bus = get_event_bus()
+        bus.publish(event)
 
     def list_readings(self, device_id: UUID, limit: int = 20) -> list[ReadingDto]:
         if self._devices.get_device(device_id) is None:

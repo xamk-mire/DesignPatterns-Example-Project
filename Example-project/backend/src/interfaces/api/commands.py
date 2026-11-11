@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from application.actuators.compose import build_actuator_port
+from application.alerts.wiring import get_event_bus
 from application.commands.dto import CommandLogDto, CommandRequestDto
 from application.commands.service import CommandRejected, CommandService, DeviceNotFound
 from domain.commands.base import UnknownCommand
@@ -32,6 +33,7 @@ def _service(db: Session) -> CommandService:
         ActuatorStateRepository(db),
         CommandLogRepository(db),
         build_actuator_port(db),
+        bus=get_event_bus(),
     )
 
 

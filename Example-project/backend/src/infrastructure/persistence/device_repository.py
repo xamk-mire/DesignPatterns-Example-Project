@@ -164,6 +164,7 @@ class DeviceRepository:
             sampling_interval_seconds=row.sampling_interval_seconds,
             tracking_enabled=row.tracking_enabled,
             zone_id=row.zone_id,
+            location_id=row.location_id,
         )
 
 

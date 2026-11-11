@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from application.alerts.wiring import get_event_bus
 from application.readings.service import DeviceNotFound, ReadingDto, ReadingIngest, ReadingRejected
 from application.sensors.service import SensorService
 from domain.devices.entity import Device
@@ -40,7 +41,7 @@ def get_device_repository(db: Session = Depends(get_db)) -> DeviceRepository:
 
 def get_reading_ingest(db: Session = Depends(get_db)) -> ReadingIngest:
     devices = DeviceRepository(db)
-    return ReadingIngest(devices, ReadingRepository(db))
+    return ReadingIngest(devices, ReadingRepository(db), get_event_bus())
 
 
 def _from_device(device: Device, zone_name: str | None) -> SensorResponse:

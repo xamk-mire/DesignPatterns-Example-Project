@@ -48,6 +48,12 @@ class LocationRepository:
         )
         return _to_config(location, zones)
 
+    def get_zone(self, zone_id: UUID) -> Zone | None:
+        row = self._session.get(ZoneRow, zone_id)
+        if row is None:
+            return None
+        return _to_zone(row)
+
     def get_zone_location_id(self, zone_id: UUID) -> UUID | None:
         row = self._session.get(ZoneRow, zone_id)
         if row is None:

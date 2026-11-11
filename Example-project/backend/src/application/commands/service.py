@@ -3,6 +3,8 @@ from uuid import UUID
 from domain.actuators.ports import ActuatorPort
 from domain.actuators.state import ActuatorContext
 from domain.commands.invoker import CommandInvoker, command_for
+from domain.events.bus import EventBus
+from domain.events.events import CommandFailed
 from infrastructure.adapters.actuators.max_runtime_decorator import MaxRunTimeExceeded
 from infrastructure.persistence.actuator_state_repository import ActuatorStateRepository
 from infrastructure.persistence.command_log_repository import CommandLogRepository, CommandRecord
@@ -26,12 +28,14 @@ class CommandService:
         logs: CommandLogRepository,
         port: ActuatorPort,
         invoker: CommandInvoker | None = None,
+        bus: EventBus | None = None,
     ) -> None:
         self._devices = devices
         self._states = states
         self._logs = logs
         self._port = port
         self._invoker = invoker or CommandInvoker()
+        self._bus = bus
 
     def submit(self, command_type: str, device_id: UUID, payload: dict) -> CommandRecord:
         device = self._devices.get_device(device_id)
@@ -52,13 +56,22 @@ class CommandService:
         try:
             self._invoker.run(command, self._port)
         except MaxRunTimeExceeded as exc:
-            return self._logs.insert(
+            record = self._logs.insert(
                 command_type=command.command_type,
                 device_id=device_id,
                 payload=payload,
                 status="failed",
                 error_message=str(exc),
             )
+            self._publish(
+                CommandFailed(
+                    device_id=device_id,
+                    location_id=device.location_id,
+                    zone_id=device.zone_id,
+                    message=str(exc),
+                )
+            )
+            return record
         if command.target_state is not None and command.target_state != context.state:
             context.transition(command.target_state)
             self._states.save(device_id, context.state)
@@ -72,3 +85,11 @@ class CommandService:
 
     def list_recent(self, limit: int) -> list[CommandRecord]:
         return self._logs.list_recent(limit)
+
+    def _publish(self, event: CommandFailed) -> None:
+        bus = self._bus
+        if bus is None:
+            from application.alerts.wiring import get_event_bus
+
+            bus = get_event_bus()
+        bus.publish(event)

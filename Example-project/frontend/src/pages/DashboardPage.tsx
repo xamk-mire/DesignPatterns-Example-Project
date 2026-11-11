@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { EventFeed } from '../components/alerts/EventFeed';
 import { ExecutionLog } from '../components/actuators/ExecutionLog';
 import { CommandPanel } from '../components/commands/CommandPanel';
 import { StrategyPanel } from '../components/automation/StrategyPanel';
@@ -7,10 +8,6 @@ import { LocationConfigWizard } from '../components/config/LocationConfigWizard'
 import { DeviceFamilyPanel } from '../components/devices/DeviceFamilyPanel';
 import { OverviewPanel } from '../components/overview/OverviewPanel';
 import { SensorList } from '../features/sensors/SensorList';
-
-const placeholders = [
-  { id: 'events', title: 'Events', note: 'Phase 11 — Observer' },
-] as const;
 
 export function DashboardPage() {
   const [assignmentVersion, setAssignmentVersion] = useState(0);
@@ -24,7 +21,7 @@ export function DashboardPage() {
           Sensors use Factory Method. Device kits use Abstract Factory.
           Location configuration uses Builder. Irrigation uses Strategy.
           The location summary uses Facade. Actuator attempts use Decorator.
-          Controls use Command.
+          Controls use Command. Alerts use Observer.
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -95,21 +92,14 @@ export function DashboardPage() {
           <p className="mt-1 mb-3 text-sm text-slate-500">Phase 10 — Command</p>
           <CommandPanel />
         </section>
-        {placeholders.map((section) => (
-          <section
-            key={section.id}
-            id={section.id}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-          >
-            <h3 className="text-lg font-semibold text-slate-800">
-              {section.title}
-            </h3>
-            <p className="mt-2 text-sm text-slate-500">{section.note}</p>
-            <p className="mt-4 rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-400">
-              Coming in a later phase.
-            </p>
-          </section>
-        ))}
+        <section
+          id="events"
+          className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:col-span-3"
+        >
+          <h3 className="text-lg font-semibold text-slate-800">Events</h3>
+          <p className="mt-1 mb-3 text-sm text-slate-500">Phase 11 — Observer</p>
+          <EventFeed />
+        </section>
       </div>
     </div>
   );
