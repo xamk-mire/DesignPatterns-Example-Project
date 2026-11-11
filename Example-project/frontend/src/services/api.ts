@@ -370,6 +370,49 @@ export async function evaluateStrategy(locationId: string): Promise<EvaluationDt
   return (await response.json()) as EvaluationDto;
 }
 
+export type CommandLogDto = {
+  id: string;
+  command_type: string;
+  device_id: string;
+  payload: Record<string, unknown>;
+  status: string;
+  error_message: string | null;
+  created_at: string;
+};
+
+export function errorText(err: unknown): string {
+  return err instanceof Error ? err.message : "Request failed";
+}
+
+export async function fetchCommands(limit = 50): Promise<CommandLogDto[]> {
+  const response = await fetch(`${API_BASE_URL}/api/commands?limit=${limit}`);
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, `Failed to list commands (${response.status})`));
+  }
+  return (await response.json()) as CommandLogDto[];
+}
+
+export async function submitCommand(body: {
+  command_type: string;
+  device_id: string;
+  payload?: Record<string, unknown>;
+}): Promise<CommandLogDto> {
+  const response = await fetch(`${API_BASE_URL}/api/commands`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const payload = (await response.json()) as CommandLogDto & { detail?: unknown };
+  if (response.status === 409 && payload.status) {
+    throw new Error(payload.error_message ?? "Command rejected");
+  }
+  if (!response.ok) {
+    const detail = typeof payload.detail === "string" ? payload.detail : `Command failed (${response.status})`;
+    throw new Error(detail);
+  }
+  return payload;
+}
+
 export async function assignDeviceZone(deviceId: string, zoneId: string | null): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/devices/${deviceId}/zone`, {
     method: "PATCH",

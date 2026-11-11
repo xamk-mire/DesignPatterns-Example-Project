@@ -191,3 +191,27 @@ class ActuatorExecutionLogRow(Base):
         nullable=False,
         server_default=text("now()"),
     )
+
+
+class CommandLogRow(Base):
+    __tablename__ = "command_log"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
+    command_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("devices.id", name="fk_command_log_device_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    payload: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default=text("'{}'::jsonb"))
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("now()"),
+    )

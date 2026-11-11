@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { ExecutionLog } from '../components/actuators/ExecutionLog';
+import { CommandPanel } from '../components/commands/CommandPanel';
 import { StrategyPanel } from '../components/automation/StrategyPanel';
 import { LocationConfigWizard } from '../components/config/LocationConfigWizard';
 import { DeviceFamilyPanel } from '../components/devices/DeviceFamilyPanel';
@@ -8,7 +9,6 @@ import { OverviewPanel } from '../components/overview/OverviewPanel';
 import { SensorList } from '../features/sensors/SensorList';
 
 const placeholders = [
-  { id: 'controls', title: 'Controls', note: 'Phase 10 — Command' },
   { id: 'events', title: 'Events', note: 'Phase 11 — Observer' },
 ] as const;
 
@@ -24,6 +24,7 @@ export function DashboardPage() {
           Sensors use Factory Method. Device kits use Abstract Factory.
           Location configuration uses Builder. Irrigation uses Strategy.
           The location summary uses Facade. Actuator attempts use Decorator.
+          Controls use Command.
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -85,6 +86,14 @@ export function DashboardPage() {
           <h3 className="text-lg font-semibold text-slate-800">Executions</h3>
           <p className="mt-1 mb-3 text-sm text-slate-500">Phase 9 — Decorator</p>
           <ExecutionLog />
+        </section>
+        <section
+          id="controls"
+          className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:col-span-3"
+        >
+          <h3 className="text-lg font-semibold text-slate-800">Controls</h3>
+          <p className="mt-1 mb-3 text-sm text-slate-500">Phase 10 — Command</p>
+          <CommandPanel />
         </section>
         {placeholders.map((section) => (
           <section
